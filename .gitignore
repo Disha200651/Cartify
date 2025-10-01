@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Secrets and environment
+.env
+
+# VS Code settings
+.vscode/
+
+# Instance DB (do NOT push)
+instance/*.db
+*.sqlite3
+*.db
+
+# Mac / Windows
+.DS_Store
+Thumbs.db

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block title %}About - Electronic Shop{% endblock %}
+{% block content %}
+<div class="row align-items-center">
+  <div class="col-md-6">
+    <h1 class="fw-bold mb-3">About Cartify</h1>
+    <p class="lead">We bring you curated electronics with transparent pricing and fast checkout.</p>
+    <p>Founded in 2025, Cartify focuses on a seamless shopping experience. Browse by category, add to cart, and generate your bill instantly with GST included.</p>
+    <div class="mt-3">
+      <a href="/" class="btn btn-primary me-2"><i class="bi bi-shop"></i> Shop Now</a>
+      <a href="/orders" class="btn btn-outline-secondary"><i class="bi bi-receipt"></i> View Orders</a>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Why shop with us?</h5>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Quality products</li>
+          <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Secure checkout</li>
+          <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Fast order history access</li>
+          <li class="mb-2"><i class="bi bi-check2-circle text-success me-2"></i>Admin-managed catalog</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  </div>
+{% endblock %}
+

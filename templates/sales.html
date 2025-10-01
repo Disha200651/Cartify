@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sales History - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Sales History</h2>
+        <a href="/admin" class="btn btn-outline-secondary">Back to Admin Panel</a>
+    </div>
+    <div id="salesList"></div>
+</div>
+<script>
+async function loadSales() {
+    const res = await fetch('/sales');
+    const sales = await res.json();
+    let html = '';
+    if (sales.length === 0) {
+        html = '<p>No sales yet.</p>';
+    } else {
+        html = sales.map(sale => `
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between">
+                    <span><b>Date:</b> ${sale.date}</span>
+                    <span><b>Total:</b> ₹${sale.grand_total}</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-bordered mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sale.items.map(item => `
+                                    <tr>
+                                        <td>${item.product}</td>
+                                        <td>${item.quantity}</td>
+                                        <td>${item.price}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-2">
+                        <b>Subtotal:</b> ₹${sale.total_amount} &nbsp; | &nbsp; <b>GST:</b> ₹${sale.gst} &nbsp; | &nbsp; <b>Grand Total:</b> ₹${sale.grand_total}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    document.getElementById('salesList').innerHTML = html;
+}
+loadSales();
+</script>
+</body>
+</html> 

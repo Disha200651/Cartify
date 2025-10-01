@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Electronic Shop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --bg:#f6f7f9; --surface:#fff; --text:#1f2937; --muted:#6b7280; --primary:#0d6efd; --border:#e5e7eb; --shadow:0 2px 12px rgba(0,0,0,0.06); }
+        body { background: var(--bg); color: var(--text); }
+        .product-img-preview { height: 48px; width: 72px; object-fit: cover; border-radius: 4px; }
+        .card { border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 0.5rem; }
+        .card-header { background: var(--surface); border-bottom: 1px solid var(--border); font-weight: 600; }
+        .btn-primary { background: var(--primary); border: none; }
+        .btn-primary:hover { filter: brightness(0.95); }
+        .table thead { background: var(--surface); }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Admin Panel - Product Management</h2>
+        <div>
+            <a href="/orders" class="btn btn-outline-primary me-2">View Orders</a>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">Total Sales</h5>
+                    <p class="card-text mb-0" id="totalSales">₹0</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-2">Estimated Profit</h5>
+                    <p class="card-text mb-0" id="totalProfit">₹0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header">Add Product</div>
+        <div class="card-body">
+            <form id="addProductForm" class="row g-3">
+                <div class="col-md-2">
+                    <input type="text" class="form-control" placeholder="Name" id="addName" required>
+                </div>
+                <div class="col-md-2">
+                    <input type="text" class="form-control" placeholder="Description" id="addDescription">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Price" id="addPrice" required min="0">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" class="form-control" placeholder="Stock" id="addStock" required min="0">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" id="addCategory">
+                        <option value="">Select Category</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="url" class="form-control" placeholder="Image URL" id="addImageUrl">
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">Products</div>
+        <div class="card-body p-0">
+            <table class="table table-striped mb-0" id="productsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editProductForm">
+          <input type="hidden" id="editId">
+          <div class="mb-3">
+            <label for="editName" class="form-label">Name</label>
+            <input type="text" class="form-control" id="editName" required>
+          </div>
+          <div class="mb-3">
+            <label for="editDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="editDescription" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="editPrice" class="form-label">Price</label>
+            <input type="number" class="form-control" id="editPrice" required min="0">
+          </div>
+          <div class="mb-3">
+            <label for="editStock" class="form-label">Stock</label>
+            <input type="number" class="form-control" id="editStock" required min="0">
+          </div>
+          <div class="mb-3">
+            <label for="editCategory" class="form-label">Category</label>
+            <select class="form-select" id="editCategory">
+              <option value="">Select Category</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="editImageUrl" class="form-label">Image URL</label>
+            <input type="url" class="form-control" id="editImageUrl">
+          </div>
+          <div class="mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="editIsActive" checked>
+              <label class="form-check-label" for="editIsActive">
+                Active Product
+              </label>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+async function loadProducts() {
+    try {
+        const response = await fetch('/api/admin/products');
+        const products = await response.json();
+        const tbody = document.querySelector('#productsTable tbody');
+        tbody.innerHTML = '';
+        products.forEach(p => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><img src="${p.image_url || 'https://via.placeholder.com/72x48?text=No+Image'}" class="product-img-preview" alt="${p.name}"></td>
+                    <td>${p.name}</td>
+                    <td>${p.description || '-'}</td>
+                    <td>${p.category || 'Uncategorized'}</td>
+                    <td>₹${p.price}</td>
+                    <td>${p.stock}</td>
+                    <td><span class="badge ${p.is_active ? 'bg-success' : 'bg-secondary'}">${p.is_active ? 'Active' : 'Inactive'}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning me-2" onclick="showEdit(${p.id}, '${p.name.replace(/'/g, "&#39;")}', '${(p.description || '').replace(/'/g, "&#39;")}', ${p.price}, ${p.stock}, '${(p.image_url || '').replace(/'/g, "&#39;")}', ${p.category_id || 'null'}, ${p.is_active})">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                    </td>
+                </tr>
+            `;
+        });
+    } catch (error) {
+        console.error('Error loading products:', error);
+    }
+}
+
+async function loadCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        const categories = await response.json();
+        const addCategorySelect = document.getElementById('addCategory');
+        const editCategorySelect = document.getElementById('editCategory');
+        
+        categories.forEach(category => {
+            addCategorySelect.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+            if (editCategorySelect) {
+                editCategorySelect.innerHTML += `<option value="${category.id}">${category.name}</option>`;
+            }
+        });
+    } catch (error) {
+        console.error('Error loading categories:', error);
+    }
+}
+
+// Fetch and display total sales and profit
+async function loadSalesSummary() {
+    try {
+        const res = await fetch('/api/orders');
+        const orders = await res.json();
+        let total = 0;
+        orders.forEach(order => { total += order.grand_total; });
+        document.getElementById('totalSales').textContent = '₹' + total;
+        document.getElementById('totalProfit').textContent = '₹' + Math.round(total * 0.2);
+    } catch (error) {
+        console.error('Error loading sales summary:', error);
+        document.getElementById('totalSales').textContent = '₹0';
+        document.getElementById('totalProfit').textContent = '₹0';
+    }
+}
+
+document.getElementById('addProductForm').onsubmit = async function(e) {
+    e.preventDefault();
+    try {
+        const response = await fetch('/api/admin/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('addName').value,
+                description: document.getElementById('addDescription').value,
+                price: parseFloat(document.getElementById('addPrice').value),
+                stock: parseInt(document.getElementById('addStock').value),
+                category_id: document.getElementById('addCategory').value || null,
+                image_url: document.getElementById('addImageUrl').value
+            })
+        });
+        
+        if (response.ok) {
+            loadProducts();
+            document.getElementById('addProductForm').reset();
+            alert('Product added successfully!');
+        } else {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+        }
+    } catch (error) {
+        alert('Error adding product');
+    }
+};
+
+function showEdit(id, name, description, price, stock, image_url, category_id, is_active) {
+    document.getElementById('editId').value = id;
+    document.getElementById('editName').value = name;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editPrice').value = price;
+    document.getElementById('editStock').value = stock;
+    document.getElementById('editImageUrl').value = image_url;
+    document.getElementById('editCategory').value = category_id || '';
+    document.getElementById('editIsActive').checked = is_active;
+    var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    editModal.show();
+}
+
+document.getElementById('editProductForm').onsubmit = async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('editId').value;
+    try {
+        const response = await fetch(`/api/admin/products/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('editName').value,
+                description: document.getElementById('editDescription').value,
+                price: parseFloat(document.getElementById('editPrice').value),
+                stock: parseInt(document.getElementById('editStock').value),
+                category_id: document.getElementById('editCategory').value || null,
+                image_url: document.getElementById('editImageUrl').value,
+                is_active: document.getElementById('editIsActive').checked
+            })
+        });
+        
+        if (response.ok) {
+            loadProducts();
+            var editModal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+            editModal.hide();
+            alert('Product updated successfully!');
+        } else {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+        }
+    } catch (error) {
+        alert('Error updating product');
+    }
+};
+
+async function deleteProduct(id) {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+    try {
+        const response = await fetch(`/api/admin/products/${id}`, { method: 'DELETE' });
+        if (response.ok) {
+            loadProducts();
+            alert('Product deleted successfully!');
+        } else {
+            const error = await response.json();
+            alert('Error: ' + error.error);
+        }
+    } catch (error) {
+        alert('Error deleting product');
+    }
+}
+
+loadProducts();
+loadCategories();
+loadSalesSummary();
+</script>
+</body>
+</html> 
