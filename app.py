@@ -4,11 +4,32 @@ from flask_login import LoginManager, UserMixin, login_user, login_required, log
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv
+import urllib.parse
+
+# Load environment variables if .env exists
+if os.path.exists('.env'):
+    load_dotenv()
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production')
+
+# Database configuration
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
+    # Fix Render PostgreSQL URL format
+    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+else:
+    # Local development - SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///shop.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
@@ -447,7 +468,7 @@ def api_delete_product(product_id):
     db.session.commit()
     return jsonify({'message': 'Product deleted'})
 
-if __name__ == '__main__':
+def init_db():
     with app.app_context():
         db.create_all()
         
@@ -460,6 +481,7 @@ if __name__ == '__main__':
                 is_admin=True
             )
             db.session.add(admin)
+            db.session.commit()
         
         # Create default categories
         if Category.query.count() == 0:
@@ -470,6 +492,7 @@ if __name__ == '__main__':
                 Category(name='Gaming', description='Gaming consoles and accessories')
             ]
             db.session.bulk_save_objects(categories)
+            db.session.commit()
         
         # Create sample products if none exist
         if Product.query.count() == 0:
@@ -477,50 +500,58 @@ if __name__ == '__main__':
             appliances_cat = Category.query.filter_by(name='Appliances').first()
             kitchen_cat = Category.query.filter_by(name='Kitchen').first()
             
-            products = [
-                Product(
-                    name='Smart TV 55"',
-                    description='4K Ultra HD Smart TV with HDR',
-                    price=45000,
-                    stock=15,
-                    image_url='https://images.unsplash.com/photo-1567690187548-f07b1d7bf5a9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHR2fGVufDB8fDB8fHww',
-                    category_id=electronics_cat.id
-                ),
-                Product(
-                    name='Refrigerator',
-                    description='Double door refrigerator with frost-free technology',
-                    price=25000,
-                    stock=10,
-                    image_url='https://images.unsplash.com/photo-1649518755041-651c29b56309?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-                    category_id=appliances_cat.id
-                ),
-                Product(
-                    name='Electric Cooker',
-                    description='5L electric pressure cooker with multiple cooking modes',
-                    price=3500,
-                    stock=25,
-                    image_url='https://images.unsplash.com/photo-1544233726-9f1d2b27be8b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y29va2VyfGVufDB8fDB8fHww',
-                    category_id=kitchen_cat.id
-                ),
-                Product(
-                    name='Gaming Console',
-                    description='Next-gen gaming console with wireless controller',
-                    price=35000,
-                    stock=8,
-                    image_url='https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2FtaW5nfGVufDB8fDB8fHww',
-                    category_id=electronics_cat.id
-                ),
-                Product(
-                    name='Washing Machine',
-                    description='Front load washing machine with 8kg capacity',
-                    price=22000,
-                    stock=12,
-                    image_url='https://media.istockphoto.com/id/1137138120/photo/photo-of-white-washing-machine-with-soft-and-fresh-bright-towels-on-top-standing-isolated.webp?a=1&b=1&s=612x612&w=0&k=20&c=NM7NdrjN62USl38qOJdCi8GQauFYjSYE6Xy2V4L7HtU=',
-                    category_id=appliances_cat.id
-                )
-            ]
-            db.session.bulk_save_objects(products)
-        
-        db.session.commit()
-    
+            if all([electronics_cat, appliances_cat, kitchen_cat]):
+                products = [
+                    Product(
+                        name='Smart TV 55"',
+                        description='4K Ultra HD Smart TV with HDR',
+                        price=45000,
+                        stock=15,
+                        image_url='https://images.unsplash.com/photo-1567690187548-f07b1d7bf5a9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTV8fHR2fGVufDB8fDB8fHww',
+                        category_id=electronics_cat.id
+                    ),
+                    Product(
+                        name='Refrigerator',
+                        description='Double door refrigerator with frost-free technology',
+                        price=25000,
+                        stock=10,
+                        image_url='https://images.unsplash.com/photo-1649518755041-651c29b56309?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+                        category_id=appliances_cat.id
+                    ),
+                    Product(
+                        name='Electric Cooker',
+                        description='5L electric pressure cooker with multiple cooking modes',
+                        price=3500,
+                        stock=25,
+                        image_url='https://images.unsplash.com/photo-1544233726-9f1d2b27be8b?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8Y29va2VyfGVufDB8fDB8fHww',
+                        category_id=kitchen_cat.id
+                    ),
+                    Product(
+                        name='Gaming Console',
+                        description='Next-gen gaming console with wireless controller',
+                        price=35000,
+                        stock=8,
+                        image_url='https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8Z2FtaW5nfGVufDB8fDB8fHww',
+                        category_id=electronics_cat.id
+                    ),
+                    Product(
+                        name='Washing Machine',
+                        description='Front load washing machine with 8kg capacity',
+                        price=22000,
+                        stock=12,
+                        image_url='https://media.istockphoto.com/id/1137138120/photo/photo-of-white-washing-machine-with-soft-and-fresh-bright-towels-on-top-standing-isolated.webp?a=1&b=1&s=612x612&w=0&k=20&c=NM7NdrjN62USl38qOJdCi8GQauFYjSYE6Xy2V4L7HtU=',
+                        category_id=appliances_cat.id
+                    )
+                ]
+                db.session.bulk_save_objects(products)
+                db.session.commit()
+
+# Initialize database tables and sample data
+init_db()
+
+if __name__ == '__main__':
     app.run(debug=True)
+    
+    # Use debug mode in development, but not in production
+    debug_mode = os.getenv('FLASK_ENV') == 'development'
+    app.run(debug=debug_mode)
