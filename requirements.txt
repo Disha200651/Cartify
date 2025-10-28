@@ -4,4 +4,5 @@ Flask-Login
 Flask-WTF
 Werkzeug
 Pillow
-python-dotenv 
+python-dotenv
+gunicorn
